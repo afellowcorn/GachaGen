@@ -27,6 +27,19 @@ class Pelt:
         'Calico': None,
     }
 
+    common_pelts = [
+        'SingleColour', 'Singlestripe', 'Ticked', "Agouti"
+    ]
+    uncommon_pelts = [
+        'Tabby', 'Mackerel', 'Classic', 'Classic'
+    ]
+    rare_pelts = [
+        'Speckled', 'Smoke', 'Rosette', 'Sokoke'
+    ]
+    epic_pelts = [
+        'Masked', 'Masked', 'Marbled', 'Bengal'
+    ]
+
     # ATTRIBUTES, including non-pelt related
     pelt_colours = [
         'WHITE', 'PALEGREY', 'SILVER', 'GREY', 'DARKGREY', 'GHOST', 'BLACK', 'CREAM', 'PALEGINGER',
@@ -211,10 +224,10 @@ class Pelt:
         self.skin = skin
 
     @staticmethod
-    def generate_new_pelt(gender: str, parents: tuple = (), age: str = "adult"):
+    def generate_new_pelt(gender: str, parents: tuple = (), age: str = "adult", rarity: str = "common"):
         new_pelt = Pelt()
 
-        pelt_white = new_pelt.init_pattern_color(parents, gender)
+        pelt_white = new_pelt.init_pattern_color(parents, gender, rarity)
         new_pelt.init_white_patches(pelt_white, parents)
         new_pelt.init_sprite()
         new_pelt.init_scars(age)
@@ -345,7 +358,7 @@ class Pelt:
                 eye_choice = choice([Pelt.yellow_eyes, Pelt.blue_eyes])
                 self.eye_colour2 = choice(eye_choice)
 
-    def pattern_color_inheritance(self, parents: tuple = (), gender="female"):
+    def pattern_color_inheritance(self, parents: tuple = (), gender="female", rarity="common"):
         # setting parent pelt categories
         # We are using a set, since we don't need this to be ordered, and sets deal with removing duplicates.
         par_peltlength = set()
@@ -542,15 +555,27 @@ class Pelt:
         self.tortiebase = chosen_tortie_base  # This will be none if the cat isn't a tortie.
         return chosen_white
 
-    def randomize_pattern_color(self, gender):
+    def randomize_pattern_color(self, gender, rarity):
         # ------------------------------------------------------------------------------------------------------------#
         #   PELT
         # ------------------------------------------------------------------------------------------------------------#
 
+        chosen_white = False
         # Determine pelt.
-        chosen_pelt = choice(
-            random.choices(Pelt.pelt_categories, weights=(35, 20, 30, 15, 0), k=1)[0]
-        )
+        if rarity == "common":
+            pelt_list = Pelt.common_pelts
+        elif rarity == "uncommon":
+            if not random.randint(0, 2):
+                pelt_list = Pelt.common_pelts
+                chosen_white = True
+            else:
+                pelt_list = Pelt.uncommon_pelts
+        elif rarity == "rare":
+            pelt_list = Pelt.rare_pelts
+        elif rarity == "epic":
+            pelt_list = Pelt.epic_pelts
+
+        chosen_pelt = choice(pelt_list)
 
         # Tortie chance
         # There is a default chance for female tortie, slightly increased for completely random generation.
@@ -562,7 +587,7 @@ class Pelt:
             torbie = random.getrandbits(tortie_chance_m) == 1
 
         chosen_tortie_base = None
-        if torbie:
+        if torbie and rarity in ["rare", "epic"]:
             # If it is tortie, the chosen pelt above becomes the base pelt.
             chosen_tortie_base = chosen_pelt
             if chosen_tortie_base in ["TwoColour", "SingleColour"]:
@@ -588,7 +613,8 @@ class Pelt:
         #   PELT WHITE
         # ------------------------------------------------------------------------------------------------------------#
 
-        chosen_white = random.randint(1, 100) <= 40
+        if not chosen_white and rarity != "common":
+            chosen_white = random.randint(1, 100) <= 40
 
         # Adjustments to pelt chosen based on if the pelt has white in it or not.
         if chosen_pelt in ["TwoColour", "SingleColour"]:
@@ -606,7 +632,7 @@ class Pelt:
         self.tortiebase = chosen_tortie_base  # This will be none if the cat isn't a tortie.
         return chosen_white
 
-    def init_pattern_color(self, parents, gender) -> bool:
+    def init_pattern_color(self, parents, gender, rarity) -> bool:
         """Inits self.name, self.colour, self.length, 
             self.tortiebase and determines if the cat 
             will have white patche or not. 
@@ -615,9 +641,9 @@ class Pelt:
 
         if parents:
             # If the cat has parents, use inheritance to decide pelt.
-            chosen_white = self.pattern_color_inheritance(parents, gender)
+            chosen_white = self.pattern_color_inheritance(parents, gender, rarity)
         else:
-            chosen_white = self.randomize_pattern_color(gender)
+            chosen_white = self.randomize_pattern_color(gender, rarity)
 
         return chosen_white
 

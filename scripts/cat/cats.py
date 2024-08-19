@@ -134,6 +134,7 @@ class Cat:
 
     def __init__(
         self,
+        rarity="common",
         prefix=None,
         gender=None,
         status="newborn",
@@ -187,6 +188,7 @@ class Cat:
         self._moons = None
 
         # Public attributes
+        self.rarity = rarity
         self.gender = gender
         self.status = status
         self.backstory = backstory
@@ -454,7 +456,7 @@ class Cat:
         self.pelt = Pelt.generate_new_pelt(
             self.gender,
             [Cat.fetch_cat(i) for i in (self.parent1, self.parent2) if i],
-            self.age,
+            self.age, self.rarity
         )
 
         # Personality
@@ -3361,6 +3363,7 @@ class Cat:
         else:
             return {
                 "ID": self.ID,
+                "rarity": self.rarity,
                 "name_prefix": self.name.prefix,
                 "name_suffix": self.name.suffix,
                 "specsuffix_hidden": self.name.specsuffix_hidden,
